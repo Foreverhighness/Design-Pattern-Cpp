@@ -32,7 +32,8 @@ template <typename T>
 struct Specification {
     virtual ~Specification() {}
     virtual bool is_satisfied(T* item) const = 0;
-    AndSpecification<T> operator&&(Specification<T>&& other);
+    template <typename U>
+    friend AndSpecification<U> operator&&(Specification<U>& lhs, Specification<U>& rhs);
 };
 
 template <typename T>
@@ -84,8 +85,8 @@ int main() {
     // auto green_things = bf.filter(all, green);
     // for (auto&& item : green_things)
     //     std::cout << item->name << " is green" << std::endl;
-    // auto green_and_big = green && large;
-    AndSpecification<Product> green_and_big(green, large);
+    auto green_and_big = green && large;
+    // AndSpecification<Product> green_and_big(green, large);
     auto things = bf.filter(all, green_and_big);
     for (auto&& item : things)
         std::cout << item->name << " is green and big" << std::endl;
@@ -100,8 +101,8 @@ BetterFilter::Items BetterFilter::filter(Items& items, Spec& spec) const {
     return ret;
 }
 template <typename T>
-AndSpecification<T> Specification<T>::operator&&(Specification<T>&& other) {
-    return AndSpecification<T>(*this, other);
+AndSpecification<T> operator&&(Specification<T>& lhs, Specification<T>& rhs) {
+    return {lhs, rhs};
 }
 bool ColorSpecification::is_satisfied(Product* item) const {
     return item->color == color;
