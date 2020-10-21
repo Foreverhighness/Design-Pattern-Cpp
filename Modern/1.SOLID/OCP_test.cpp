@@ -31,7 +31,7 @@ struct FooBind : FooBase<T> {
         b->bar(val);
     }
 };
-}
+} // namespace aaa
 namespace bbb {
 template <typename T> struct Binded;
 template <typename T>
@@ -56,7 +56,7 @@ struct Binded : Base<T> {
         a.bar(val); b.bar(val);
     }
 };
-}
+} // namespace bbb
 namespace ccc {
 template <typename T> struct Binded;
 template <typename T>
@@ -84,8 +84,8 @@ struct Binded : Base<T> {
         a->bar(val); b->bar(val);
     }
 };
-}
-}
+} // namespace ccc
+} // namespace generic
 
 namespace specific {
 namespace worked_using_raw_pointer {
@@ -128,7 +128,7 @@ Binded* Base::bind(Base* other) {
 struct Plus1 : Base { Plus1() { mark = 1;} void bar(int val) override { cout << val + 1 << endl; } };
 struct Plus2 : Base { Plus2() { mark = 2;} void bar(int val) override { cout << val + 2 << endl; } };
 struct Plus3 : Base { Plus3() { mark = 3;} void bar(int val) override { cout << val + 3 << endl; } };
-}
+} // worked_using_raw_pointer
 namespace bbb {
 struct Binded;
 struct Base {
@@ -155,7 +155,7 @@ Binded* Base::bind(Base* other) {
 struct Plus1 : Base { Plus1() { mark = 1;} void bar(int val) override { cout << val + 1 << endl; } };
 struct Plus2 : Base { Plus2() { mark = 2;} void bar(int val) override { cout << val + 2 << endl; } };
 struct Plus3 : Base { Plus3() { mark = 3;} void bar(int val) override { cout << val + 3 << endl; } };
-}
+} // namespace bbb
 namespace ccc {
 struct Binded;
 struct Base {
@@ -182,7 +182,7 @@ unique_ptr<Binded> Base::bind(Base* other) {
 struct Plus1 : Base { Plus1() { mark = 1;} void bar(int val) override { cout << val + 1 << endl; } };
 struct Plus2 : Base { Plus2() { mark = 2;} void bar(int val) override { cout << val + 2 << endl; } };
 struct Plus3 : Base { Plus3() { mark = 3;} void bar(int val) override { cout << val + 3 << endl; } };
-}
+} // namespace ccc
 namespace worked_using_shared_ptr_pointer {
 int time = 0;
 struct Binded;
@@ -221,7 +221,7 @@ void test() {
     cout << endl;
     dfs(b.get(), b.use_count());
 }
-}
+} // namespace worked_using_shared_ptr_pointer
 namespace untest_ref {
 int time = 0;
 struct Binded;
@@ -259,8 +259,8 @@ void test() {
     // auto b = Plus1() && Plus2() && Plus3();
     b.bar(1);
 }
-}
-}
+} // namespace untest_ref
+} // namespace specific
 
 int main() {
     using namespace specific::untest_ref;
