@@ -7,8 +7,8 @@
 // 数据库类会对`getInstance（获取实例）`方法进行定义以让客户端在程序各处
 // 都能访问相同的数据库连接实例。
 class Database {
-    static Database* _pinstance;
-    static std::mutex _mutex;
+    inline static Database* _pinstance{nullptr};
+    inline static std::mutex _mutex;
     std::string _value;
     Database(std::string_view s) : _value(s) {}
 
@@ -26,8 +26,7 @@ class Database {
     Database(Database&&) = delete;
     void operator=(const Database&) = delete;
 };
-Database* Database::_pinstance{nullptr};
-std::mutex Database::_mutex;
+
 void ThreadFoo() {
     // Following code emulates slow initialization.
     std::this_thread::sleep_for(std::chrono::milliseconds(1000));
@@ -38,7 +37,7 @@ void ThreadFoo() {
 void ThreadBar() {}
 struct App {
     App() {
-        std::cout << "If you see the same value, then singleton was reused (yay!\n"
+        std::cout << "If you see the same value, then singleton was reused (yay!)\n"
                   << "If you see different values, then more singletons were created (booo!!)\n\n"
                   << "RESULT:\n";
         std::vector<std::string> paras{"Foo", "Bar"};

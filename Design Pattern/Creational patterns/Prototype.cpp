@@ -39,7 +39,7 @@ class Circle : public Shape {
 };
 
 class ShapeCache {
-    static vector<unique_ptr<Shape>> shapes;
+    inline static vector<unique_ptr<Shape>> shapes;
 
    public:
     static unique_ptr<Shape> get(const int id) { return ShapeCache::shapes.at(id)->clone(); }
@@ -49,7 +49,6 @@ class ShapeCache {
         ShapeCache::shapes.emplace_back(new Rectangle{0, 0, "Rectangle", 1, 2});
     }
 };
-vector<unique_ptr<Shape>> ShapeCache::shapes;
 
 class App {
    public:

@@ -96,9 +96,8 @@ struct Line2PointCacheAdapter {
 
    private:
     std::size_t hash_code_;
-    static unordered_map<std::size_t, Points> cache;
+    inline static unordered_map<std::size_t, Points> cache;
 };
-unordered_map<std::size_t, Line2PointCacheAdapter::Points> Line2PointCacheAdapter::cache;
 
 void test() {
     vector<shared_ptr<VecObject>> vectorObjects{make_shared<VecRectangle>(0, 0, 3, 3),
