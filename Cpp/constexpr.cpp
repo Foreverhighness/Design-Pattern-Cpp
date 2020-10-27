@@ -32,9 +32,9 @@ int main() {
     // 1, 1, 2, 3, 5, 8, 13, 21, 34, 55
     // int n;
     // while (std::cin >> n) {
-    constexpr int N = 15000;
+    constexpr int N = 20;
     std::cout << fibonacci(N) << std::endl;
-    if constexpr (fibonacci(10000)) {
+    if constexpr (static_cast<bool>(fibonacci(N))) {
         std::cout << "Yes" << std::endl;
     } else {
         std::cout << "No" << std::endl;
