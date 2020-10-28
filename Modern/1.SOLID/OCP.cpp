@@ -33,7 +33,9 @@ struct Specification {
     virtual ~Specification() {}
     virtual bool is_satisfied(T* item) const = 0;
     template <typename U>
-    friend AndSpecification<U> operator&&(Specification<U>& lhs, Specification<U>& rhs);
+    friend AndSpecification<U> operator&&(const Specification<U>& lhs, const Specification<U>& rhs);
+    // template <typename U>
+    // friend AndSpecification<U> operator&&(Specification<U>&& lhs, Specification<U>&& rhs);
 };
 
 template <typename T>
@@ -63,10 +65,12 @@ struct SizeSpecification : Specification<Product> {
 template <typename T>
 struct AndSpecification : Specification<T> {
     using Spec = Specification<T>;
-    Spec& first;
-    Spec& second;
+    const Spec& first;
+    const Spec& second;
 
-    AndSpecification(Spec& first, Spec& second) : first(first), second(second) {}
+    AndSpecification(const Spec& first, const Spec& second) : first(first), second(second) {}
+    // AndSpecification(Spec&& first, Spec&& second) : first(first), second(second) {}
+    // AndSpecification(Spec& first, Spec& second) : first(first), second(second) {}
     bool is_satisfied(T* item) const override;
 };
 
@@ -85,8 +89,13 @@ int main() {
     // auto green_things = bf.filter(all, green);
     // for (auto&& item : green_things)
     //     std::cout << item->name << " is green" << std::endl;
-    auto green_and_big = green && large;
+    // auto green_and_big = green && large;
     // AndSpecification<Product> green_and_big(green, large);
+    Specification<Product>&& rval_green = ColorSpecification(Color::Green);
+    Specification<Product>&& rval_large = SizeSpecification(Size::Large);
+    AndSpecification<Product> green_and_big{rval_green && rval_large};
+    // The next line will generate a runtime error because of a lifetime error
+    // AndSpecification<Product> green_and_big{ColorSpecification(Color::Green) && SizeSpecification(Size::Large)};
     auto things = bf.filter(all, green_and_big);
     for (auto&& item : things)
         std::cout << item->name << " is green and big" << std::endl;
@@ -101,9 +110,13 @@ BetterFilter::Items BetterFilter::filter(Items& items, Spec& spec) const {
     return ret;
 }
 template <typename T>
-AndSpecification<T> operator&&(Specification<T>& lhs, Specification<T>& rhs) {
+AndSpecification<T> operator&&(const Specification<T>& lhs, const Specification<T>& rhs) {
     return {lhs, rhs};
 }
+// template <typename T>
+// AndSpecification<T> operator&&(Specification<T>&& lhs, Specification<T>&& rhs) {
+//     return {lhs, rhs};
+// }
 bool ColorSpecification::is_satisfied(Product* item) const {
     return item->color == color;
 }
