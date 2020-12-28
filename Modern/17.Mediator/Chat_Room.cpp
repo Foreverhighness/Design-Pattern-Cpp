@@ -1,67 +1,73 @@
 #include <algorithm>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <vector>
 using namespace std;
 
 struct ChatRoom;
-struct Person {
+class Person {
+ public:
   string name;
-  ChatRoom* room = nullptr;
+  weak_ptr<ChatRoom> room;
   vector<string> chat_log;
-
-  explicit Person(string_view name) : name(name) {}
 
   void receive(string_view origin, string_view message);
   void say(string_view message) const;
   void pm(string_view who, string_view message) const;
+
+  static shared_ptr<Person> create(string_view name) { return shared_ptr<Person>{new Person{name}}; }
+
+ private:
+  explicit Person(string_view name) : name(name) {}
 };
 
-struct ChatRoom {
-  vector<Person*> people;
-  void join(Person* p) {
+struct ChatRoom : enable_shared_from_this<ChatRoom> {
+  vector<weak_ptr<Person>> people;
+  void join(shared_ptr<Person>& p) {
     string join_msg = p->name + " joins the chat";
     broadcast("room", join_msg);
-    p->room = this;
+    p->room = this->shared_from_this();
     people.emplace_back(p);
   }
   void broadcast(string_view origin, string_view message) {
-    for (auto p : people)
-      if (p->name != origin)
-        p->receive(origin, message);
+    for (auto wp : people)
+      if (auto sp = wp.lock(); sp && sp->name != origin)
+        sp->receive(origin, message);
   }
   void message(string_view origin, string_view who, string_view message) {
-    if (auto it = find_if(begin(people), end(people), [&](const Person* p) { return p->name == who; });
+    if (auto it = find_if(begin(people), end(people),
+                          [who](weak_ptr<Person>& p) { return !p.expired() && p.lock()->name == who; });
         it != end(people)) {
-      (*it)->receive(origin, message);
+      it->lock()->receive(origin, message);
     }
   }
 };
 
 void Person::receive(string_view origin, string_view message) {
   ostringstream oss;
-  oss << origin << ": \"" << message << "\"";
+  oss << origin << R"(: ")" << message << R"(")";
   cout << "[" << name << "'s chat session] " << oss.str() << "\n";
   chat_log.emplace_back(oss.str());
 }
-void Person::say(string_view message) const { room->broadcast(name, message); }
-void Person::pm(string_view who, string_view message) const { room->message(name, who, message); }
+void Person::say(string_view message) const { room.lock()->broadcast(name, message); }
+void Person::pm(string_view who, string_view message) const { room.lock()->message(name, who, message); }
 
 void test() {
-  ChatRoom room;
+  auto room{make_shared<ChatRoom>()};
 
-  Person john{"john"};
-  Person jane{"jane"};
-  room.join(&john);
-  room.join(&jane);
-  john.say("hi room");
-  jane.say("oh, hey john");
+  auto john{Person::create("john")};
+  auto jane{Person::create("jane")};
+  room->join(john);
+  room->join(jane);
+  john->say("hi room");
+  jane->say("oh, hey john");
 
-  Person simon("simon");
-  room.join(&simon);
-  simon.say("hi everyone!");
+  auto simon{Person::create("simon")};
+  room->join(simon);
+  simon->say("hi everyone!");
 
-  jane.pm("simon", "glad you could join us, simon");
+  jane->pm("simon", "glad you could join us, simon");
 }
 
 int main() {
