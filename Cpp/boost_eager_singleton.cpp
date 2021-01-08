@@ -15,20 +15,20 @@ namespace di = boost::di;
 
 //<-
 class interface {
-   public:
-    virtual ~interface() noexcept = default;
-    virtual void dummy() = 0;
+ public:
+  virtual ~interface() noexcept = default;
+  virtual void dummy() = 0;
 };
 
 class implementation : public interface {
-   public:
-    implementation() { ++ctor_calls(); }
-    void dummy() override {}
+ public:
+  implementation() { ++ctor_calls(); }
+  void dummy() override {}
 
-    static int& ctor_calls() {
-        static auto calls = 0;
-        return calls;
-    }
+  static int& ctor_calls() {
+    static auto calls = 0;
+    return calls;
+  }
 };
 
 // clang-format off
@@ -49,43 +49,43 @@ void create_singletons_eagerly_impl(const di::aux::type<TDependency>&, const TIn
 
 template <class... TDeps, class TInjector>
 void create_singletons_eagerly(const di::aux::type_list<TDeps...>&, const TInjector& injector) {
-    auto i = [](...) {};
-    i((create_singletons_eagerly_impl(di::aux::type<TDeps>{}, injector), 0)...);
+  auto i = [](...) {};
+  i((create_singletons_eagerly_impl(di::aux::type<TDeps>{}, injector), 0)...);
 }
 
 template <class TInjector>
 void eager_singletons(const TInjector& injector) {
-    // injector.tmplate create<std::shared_ptr<typename TDeps::expected>>();
-    create_singletons_eagerly(typename TInjector::deps{}, injector);
+  // injector.tmplate create<std::shared_ptr<typename TDeps::expected>>();
+  create_singletons_eagerly(typename TInjector::deps{}, injector);
 }
 //->
 
 auto configuration = [] {
-    // clang-format off
+  // clang-format off
   return di::make_injector(
     di::bind<interface>().to<implementation>().in(di::singleton)
 //   , di::bind<int>().to(42)
   );
-    // clang-format on
+  // clang-format on
 };
 
 struct example {
-    example(int i, std::shared_ptr<interface> object) {
-        // assert(42 == i);
-        assert(dynamic_cast<implementation*>(object.get()));
-    }
+  example(int i, std::shared_ptr<interface> object) {
+    // assert(42 == i);
+    assert(dynamic_cast<implementation*>(object.get()));
+  }
 };
 
 int main() {
-    /*<<make injector configuration>>*/
-    auto injector = di::make_injector(configuration());
-    assert(0 == implementation::ctor_calls());
+  /*<<make injector configuration>>*/
+  auto injector = di::make_injector(configuration());
+  assert(0 == implementation::ctor_calls());
 
-    /*<<eagerly initialize singletons>>*/
-    eager_singletons(injector);
-    assert(1 == implementation::ctor_calls());
+  /*<<eagerly initialize singletons>>*/
+  eager_singletons(injector);
+  assert(1 == implementation::ctor_calls());
 
-    /*<<create `example` with already initialized singletons>>*/
-    injector.create<example>();
-    assert(1 == implementation::ctor_calls());
+  /*<<create `example` with already initialized singletons>>*/
+  injector.create<example>();
+  assert(1 == implementation::ctor_calls());
 }

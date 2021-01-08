@@ -9,20 +9,24 @@ struct A {
   string log{"Default"};
 };
 
-A create_with_move() {
-  A a;
-  return std::move(a);
-}
 A create() {
   A a;
   return a;
 }
 
+A create_with_move() {
+  A a;
+  return std::move(a);  // warnning: move a local object.
+}
+
 A&& create_rref() {
   A a;
-  return std::move(a);
+  return std::move(a); // bug.
 }
-A&& create_rref_without_move() { return A(); }
+
+A&& create_rref_without_move() {
+  return A();  // bug, warning: return reference to local temporary object.
+}
 
 int main() {
   {
